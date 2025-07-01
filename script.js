@@ -1,30 +1,3 @@
-// function toggleInputs() {
-//   const input = document.getElementById("inputFormat").value;
-//   const output = document.getElementById("outputFormat").value;
-//   const folderMode = document.getElementById("folderToggle").checked;
-
-//   document.getElementById("fileInputs").classList.toggle("hidden", folderMode);
-//   document.getElementById("folderInputs").classList.toggle("hidden", !folderMode);
-
-//   document.getElementById("jsonFileInput").classList.add("hidden");
-//   document.getElementById("xmlXsdInputs").classList.add("hidden");
-//   document.getElementById("xsdLabel").classList.add("hidden");
-//   document.getElementById("folderXsdFile").classList.add("hidden");
-
-//   if (!folderMode) {
-//     if (input === "json" && output === "xml") {
-//       document.getElementById("jsonFileInput").classList.remove("hidden");
-//     } else if (input === "xml-xsd" && output === "json") {
-//       document.getElementById("xmlXsdInputs").classList.remove("hidden");
-//     }
-//   } else {
-//     if (input === "xml-xsd" && output === "json") {
-//       document.getElementById("xsdLabel").classList.remove("hidden");
-//       document.getElementById("folderXsdFile").classList.remove("hidden");
-//     }
-//   }
-// }
-
 function toggleInputs() {
   const inputFormat = document.getElementById("inputFormat").value;
   const outputFormat = document.getElementById("outputFormat").value;
@@ -106,23 +79,6 @@ function convertElementToJson(el, arrayElements) {
   return node;
 }
 
-// function objectToXml(obj) {
-//   if (obj === null || obj === undefined) return "";
-//   if (typeof obj !== "object") return escapeXml(obj.toString());
-//   let xml = "";
-//   for (const key in obj) {
-//     const value = obj[key];
-//     if (Array.isArray(value)) {
-//       for (const item of value) xml += `<${key}>${objectToXml(item)}</${key}>`;
-//     } else if (typeof value === "object") {
-//       xml += `<${key}>${objectToXml(value)}</${key}>`;
-//     } else {
-//       xml += `<${key}>${escapeXml(value)}</${key}>`;
-//     }
-//   }
-//   return xml;
-// }
-
 function convertJsonToXml(obj, rootName) {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<${rootName}>\n`;
@@ -160,11 +116,6 @@ function objectToXml(obj, indentLevel = 0) {
 }
 
 
-
-// function escapeXml(unsafe) {
-//   return unsafe.replace(/[<>&'\"]/g, c => ({'<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;'}[c]));
-// }
-
 function escapeXml(unsafe) {
   return String(unsafe).replace(/[<>&'"]/g, function (c) {
     switch (c) {
@@ -177,6 +128,140 @@ function escapeXml(unsafe) {
   });
 }
 
+// async function handleConversion() {
+//   const input = document.getElementById("inputFormat").value;
+//   const output = document.getElementById("outputFormat").value;
+//   const folderMode = document.getElementById("folderToggle").checked;
+//   const log = document.getElementById("outputLog");
+//   const link = document.getElementById("downloadLink");
+//   log.textContent = "";
+//   link.classList.add("hidden");
+
+//   try {
+//     if (!folderMode) {
+//       if (input === "xml-xsd" && output === "json") {
+//         const xml = document.getElementById("xmlFile").files[0];
+//         const xsd = document.getElementById("xsdFile").files[0];
+//         if (!xml || !xsd) throw new Error("XML or XSD file missing.");
+//         const xmlText = await xml.text();
+//         const xsdText = await xsd.text();
+
+//         let xmlDoc;
+//         try {
+//           xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+//           if (xmlDoc.querySelector("parsererror")) throw new Error("Malformed XML.");
+//         } catch (err) {
+//           throw new Error("Invalid XML syntax.");
+//         }
+
+//         const arrayElements = parseXSD(xsdText);
+//         const root = xmlDoc.documentElement;
+//         const json = convertElementToJson(root, arrayElements);
+//         const result = root.nodeName === "Root" ? json : { [root.nodeName]: json };
+//         const jsonStr = JSON.stringify(result, null, 2);
+//         log.textContent = jsonStr;
+//         const blob = new Blob([jsonStr], { type: "application/json" });
+//         link.href = URL.createObjectURL(blob);
+//         link.download = "output.json";
+//         link.classList.remove("hidden");
+
+//       } else if (input === "json" && output === "xml") {
+//         const json = document.getElementById("jsonFile").files[0];
+//         if (!json) throw new Error("JSON file missing.");
+//         const jsonText = await json.text();
+
+//         let obj;
+//         try {
+//           obj = JSON.parse(jsonText);
+//         } catch (err) {
+//           throw new Error("Invalid JSON syntax.");
+//         }
+
+//         const keys = Object.keys(obj);
+//         const xml = keys.length === 1 ? `<${keys[0]}>${objectToXml(obj[keys[0]])}</${keys[0]}>` : `<Root>${objectToXml(obj)}</Root>`;
+//         log.textContent = xml;
+//         const blob = new Blob([xml], { type: "application/xml" });
+//         link.href = URL.createObjectURL(blob);
+//         link.download = "output.xml";
+//         link.classList.remove("hidden");
+
+//       } else {
+//         throw new Error("Unsupported conversion");
+//       }
+
+//     } else {
+//       const files = document.getElementById("folderInput").files;
+//       const zip = new JSZip();
+
+//       let successCount = 0;
+//       let failCount = 0;
+//       let failedFiles = [];
+
+//       if (input === "xml-xsd" && output === "json") {
+//         const xsdFile = document.getElementById("folderXsdFile").files[0];
+//         if (!xsdFile) throw new Error("Please upload XSD file.");
+//         const xsdText = await xsdFile.text();
+//         const arrayElements = parseXSD(xsdText);
+
+//         for (const file of files) {
+//           if (!file.name.endsWith(".xml")) continue;
+//           try {
+//             const text = await file.text();
+//             const xmlDoc = new DOMParser().parseFromString(text, "application/xml");
+//             if (xmlDoc.querySelector("parsererror")) throw new Error("Malformed XML.");
+//             const root = xmlDoc.documentElement;
+//             const json = convertElementToJson(root, arrayElements);
+//             const finalJson = root.nodeName === "Root" ? json : { [root.nodeName]: json };
+//             zip.file(file.name.replace(".xml", ".json"), JSON.stringify(finalJson, null, 2));
+//             successCount++;
+//           } catch (err) {
+//             failCount++;
+//             failedFiles.push(`${file.name} (Error: ${err.message})`);
+//           }
+//         }
+
+//       } else if (input === "json" && output === "xml") {
+//         for (const file of files) {
+//           if (!file.name.endsWith(".json")) continue;
+//           try {
+//             const text = await file.text();
+//             const json = JSON.parse(text);
+//             const keys = Object.keys(json);
+//             const xml = keys.length === 1
+//               ? `<${keys[0]}>${objectToXml(json[keys[0]])}</${keys[0]}>`
+//               : `<Root>${objectToXml(json)}</Root>`;
+//             zip.file(file.name.replace(".json", ".xml"), xml);
+//             successCount++;
+//           } catch (err) {
+//             failCount++;
+//             failedFiles.push(`${file.name} (Error: ${err.message})`);
+//           }
+//         }
+//       } else {
+//         throw new Error("Unsupported conversion");
+//       }
+
+//       if (successCount > 0) {
+//         const blob = await zip.generateAsync({ type: "blob" });
+//         link.href = URL.createObjectURL(blob);
+//         link.download = "converted_output.zip";
+//         link.classList.remove("hidden");
+//       }
+
+//       log.textContent =
+//         `✅ Successfully converted files: ${successCount}\n` +
+//         `❌ Failed to convert files: ${failCount}\n` +
+//         (failedFiles.length ? `\nFailed Files:\n- ${failedFiles.join('\n- ')}` : '');
+//     }
+//   } catch (e) {
+//     log.textContent = "Error: " + e.message;
+//   }
+// }
+
+//---------------------------------------------------------------------------
+
+// ... (keep existing functions like toggleInputs, parseXSD, convertElementToJson, objectToXml, escapeXml, etc.)
+
 async function handleConversion() {
   const input = document.getElementById("inputFormat").value;
   const output = document.getElementById("outputFormat").value;
@@ -188,63 +273,68 @@ async function handleConversion() {
 
   try {
     if (!folderMode) {
-      if (input === "xml-xsd" && output === "json") {
-        const xml = document.getElementById("xmlFile").files[0];
-        const xsd = document.getElementById("xsdFile").files[0];
-        if (!xml || !xsd) throw new Error("XML or XSD file missing.");
-        const xmlText = await xml.text();
-        const xsdText = await xsd.text();
+      // Single file conversion (same as before)
+      // ... (retain existing logic)
 
-        let xmlDoc;
-        try {
-          xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
-          if (xmlDoc.querySelector("parsererror")) throw new Error("Malformed XML.");
-        } catch (err) {
-          throw new Error("Invalid XML syntax.");
+        if (input === "xml-xsd" && output === "json") {
+          const xml = document.getElementById("xmlFile").files[0];
+          const xsd = document.getElementById("xsdFile").files[0];
+          if (!xml || !xsd) throw new Error("XML or XSD file missing.");
+          const xmlText = await xml.text();
+          const xsdText = await xsd.text();
+
+          let xmlDoc;
+          try {
+            xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
+            if (xmlDoc.querySelector("parsererror")) throw new Error("Malformed XML.");
+          } catch (err) {
+            throw new Error("Invalid XML syntax.");
+          }
+
+          const arrayElements = parseXSD(xsdText);
+          const root = xmlDoc.documentElement;
+          const json = convertElementToJson(root, arrayElements);
+          const result = root.nodeName === "Root" ? json : { [root.nodeName]: json };
+          const jsonStr = JSON.stringify(result, null, 2);
+          log.textContent = jsonStr;
+          const blob = new Blob([jsonStr], { type: "application/json" });
+          link.href = URL.createObjectURL(blob);
+          link.download = "output.json";
+          link.classList.remove("hidden");
+
+        } else if (input === "json" && output === "xml") {
+          const json = document.getElementById("jsonFile").files[0];
+          if (!json) throw new Error("JSON file missing.");
+          const jsonText = await json.text();
+
+          let obj;
+          try {
+            obj = JSON.parse(jsonText);
+          } catch (err) {
+            throw new Error("Invalid JSON syntax.");
+          }
+
+          const keys = Object.keys(obj);
+          const xml = keys.length === 1 ? `<${keys[0]}>${objectToXml(obj[keys[0]])}</${keys[0]}>` : `<Root>${objectToXml(obj)}</Root>`;
+          log.textContent = xml;
+          const blob = new Blob([xml], { type: "application/xml" });
+          link.href = URL.createObjectURL(blob);
+          link.download = "output.xml";
+          link.classList.remove("hidden");
+
+        } else {
+          throw new Error("Unsupported conversion");
         }
 
-        const arrayElements = parseXSD(xsdText);
-        const root = xmlDoc.documentElement;
-        const json = convertElementToJson(root, arrayElements);
-        const result = root.nodeName === "Root" ? json : { [root.nodeName]: json };
-        const jsonStr = JSON.stringify(result, null, 2);
-        log.textContent = jsonStr;
-        const blob = new Blob([jsonStr], { type: "application/json" });
-        link.href = URL.createObjectURL(blob);
-        link.download = "output.json";
-        link.classList.remove("hidden");
-
-      } else if (input === "json" && output === "xml") {
-        const json = document.getElementById("jsonFile").files[0];
-        if (!json) throw new Error("JSON file missing.");
-        const jsonText = await json.text();
-
-        let obj;
-        try {
-          obj = JSON.parse(jsonText);
-        } catch (err) {
-          throw new Error("Invalid JSON syntax.");
-        }
-
-        const keys = Object.keys(obj);
-        const xml = keys.length === 1 ? `<${keys[0]}>${objectToXml(obj[keys[0]])}</${keys[0]}>` : `<Root>${objectToXml(obj)}</Root>`;
-        log.textContent = xml;
-        const blob = new Blob([xml], { type: "application/xml" });
-        link.href = URL.createObjectURL(blob);
-        link.download = "output.xml";
-        link.classList.remove("hidden");
-
-      } else {
-        throw new Error("Unsupported conversion");
-      }
 
     } else {
       const files = document.getElementById("folderInput").files;
       const zip = new JSZip();
-
       let successCount = 0;
       let failCount = 0;
+      let invalidCount = 0;
       let failedFiles = [];
+      let invalidFiles = [];
 
       if (input === "xml-xsd" && output === "json") {
         const xsdFile = document.getElementById("folderXsdFile").files[0];
@@ -253,7 +343,11 @@ async function handleConversion() {
         const arrayElements = parseXSD(xsdText);
 
         for (const file of files) {
-          if (!file.name.endsWith(".xml")) continue;
+          if (!file.name.endsWith(".xml")) {
+            invalidCount++;
+            invalidFiles.push(file.name);
+            continue;
+          }
           try {
             const text = await file.text();
             const xmlDoc = new DOMParser().parseFromString(text, "application/xml");
@@ -271,7 +365,11 @@ async function handleConversion() {
 
       } else if (input === "json" && output === "xml") {
         for (const file of files) {
-          if (!file.name.endsWith(".json")) continue;
+          if (!file.name.endsWith(".json")) {
+            invalidCount++;
+            invalidFiles.push(file.name);
+            continue;
+          }
           try {
             const text = await file.text();
             const json = JSON.parse(text);
@@ -300,94 +398,10 @@ async function handleConversion() {
       log.textContent =
         `✅ Successfully converted files: ${successCount}\n` +
         `❌ Failed to convert files: ${failCount}\n` +
-        (failedFiles.length ? `\nFailed Files:\n- ${failedFiles.join('\n- ')}` : '');
+        (failedFiles.length ? `\nFailed Files:\n- ${failedFiles.join('\n- ')}` : '') +
+        (invalidFiles.length ? `\n\n🚫 Invalid Format Files (not processed): ${invalidCount}\n- ${invalidFiles.join('\n- ')}` : '');
     }
   } catch (e) {
     log.textContent = "Error: " + e.message;
   }
 }
-
-
-
-// async function handleConversion() {
-//   const input = document.getElementById("inputFormat").value;
-//   const output = document.getElementById("outputFormat").value;
-//   const folderMode = document.getElementById("folderToggle").checked;
-//   const log = document.getElementById("outputLog");
-//   const link = document.getElementById("downloadLink");
-//   log.textContent = "";
-//   link.classList.add("hidden");
-
-//   try {
-//     if (!folderMode) {
-//       if (input === "xml-xsd" && output === "json") {
-//         const xml = document.getElementById("xmlFile").files[0];
-//         const xsd = document.getElementById("xsdFile").files[0];
-//         if (!xml || !xsd) throw new Error("XML or XSD missing");
-//         const xmlText = await xml.text();
-//         const xsdText = await xsd.text();
-//         const arrayElements = parseXSD(xsdText);
-//         const xmlDoc = new DOMParser().parseFromString(xmlText, "application/xml");
-//         const root = xmlDoc.documentElement;
-//         const json = convertElementToJson(root, arrayElements);
-//         const result = root.nodeName === "Root" ? json : { [root.nodeName]: json };
-//         const jsonStr = JSON.stringify(result, null, 2);
-//         log.textContent = jsonStr;
-//         const blob = new Blob([jsonStr], { type: "application/json" });
-//         link.href = URL.createObjectURL(blob);
-//         link.download = "output.json";
-//         link.classList.remove("hidden");
-//       } else if (input === "json" && output === "xml") {
-//         const json = document.getElementById("jsonFile").files[0];
-//         if (!json) throw new Error("JSON file missing");
-//         const jsonText = await json.text();
-//         const obj = JSON.parse(jsonText);
-//         const keys = Object.keys(obj);
-//         const xml = keys.length === 1 ? `<${keys[0]}>${objectToXml(obj[keys[0]])}</${keys[0]}>` : `<Root>${objectToXml(obj)}</Root>`;
-//         log.textContent = xml;
-//         const blob = new Blob([xml], { type: "application/xml" });
-//         link.href = URL.createObjectURL(blob);
-//         link.download = "output.xml";
-//         link.classList.remove("hidden");
-//       } else {
-//         throw new Error("Unsupported conversion");
-//       }
-//     } else {
-//       const files = document.getElementById("folderInput").files;
-//       const zip = new JSZip();
-//       if (input === "xml-xsd" && output === "json") {
-//         const xsdFile = document.getElementById("folderXsdFile").files[0];
-//         if (!xsdFile) throw new Error("Please upload XSD file");
-//         const xsdText = await xsdFile.text();
-//         const arrayElements = parseXSD(xsdText);
-//         for (const file of files) {
-//           if (!file.name.endsWith(".xml")) continue;
-//           const text = await file.text();
-//           const xmlDoc = new DOMParser().parseFromString(text, "application/xml");
-//           const root = xmlDoc.documentElement;
-//           const json = convertElementToJson(root, arrayElements);
-//           const finalJson = root.nodeName === "Root" ? json : { [root.nodeName]: json };
-//           zip.file(file.name.replace(".xml", ".json"), JSON.stringify(finalJson, null, 2));
-//         }
-//       } else if (input === "json" && output === "xml") {
-//         for (const file of files) {
-//           if (!file.name.endsWith(".json")) continue;
-//           const text = await file.text();
-//           const json = JSON.parse(text);
-//           const keys = Object.keys(json);
-//           const xml = keys.length === 1 ? `<${keys[0]}>${objectToXml(json[keys[0]])}</${keys[0]}>` : `<Root>${objectToXml(json)}</Root>`;
-//           zip.file(file.name.replace(".json", ".xml"), xml);
-//         }
-//       } else {
-//         throw new Error("Unsupported conversion");
-//       }
-//       const blob = await zip.generateAsync({ type: "blob" });
-//       link.href = URL.createObjectURL(blob);
-//       link.download = "converted_output.zip";
-//       link.classList.remove("hidden");
-//       log.textContent = "Folder converted successfully.";
-//     }
-//   } catch (e) {
-//     log.textContent = "Error: " + e.message;
-//   }
-// }
