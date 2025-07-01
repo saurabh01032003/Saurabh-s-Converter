@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON & XML Converter</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+   <link rel="stylesheet" href="style.css">
+
+<body>
+<div class="container py-5">
+  <h2 class="text-center mb-4">📁 JSON & XML Converter </h2>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <label class="form-label">Choose Input Format:</label>
+      <select class="form-select" id="inputFormat" onchange="toggleInputs()">
+        <option value="json">JSON</option>
+        <option value="xml-xsd">XML</option>
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Choose Output Format:</label>
+      <select class="form-select" id="outputFormat" onchange="toggleInputs()">
+        <option value="xml">XML</option>
+        <option value="json">JSON</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-check form-switch mb-3">
+    <input class="form-check-input" type="checkbox" id="folderToggle" onchange="toggleInputs()">
+    <label class="form-check-label" for="folderToggle">Convert Folder</label>
+  </div>
+
+  <div id="fileInputs">
+    <div id="jsonFileInput" class="mb-3">
+      <label>Select JSON File:</label>
+      <input type="file" class="form-control" id="jsonFile" accept=".json" />
+    </div>
+
+    <div id="xmlXsdInputs" class="mb-3 hidden">
+      <label>Select XML File:</label>
+      <input type="file" class="form-control" id="xmlFile" accept=".xml" />
+      <label class="mt-2">Select XSD File:</label>
+      <input type="file" class="form-control" id="xsdFile" accept=".xsd" />
+    </div>
+  </div>
+
+  <div id="folderInputs" class="mb-3 hidden">
+    <label>Select Folder of XML/JSON Files:</label>
+    <input type="file" class="form-control" id="folderInput" webkitdirectory mozdirectory multiple />
+    <label id="xsdLabel" class="mt-2 hidden">Select XSD File:</label>
+    <input type="file" class="form-control hidden" id="folderXsdFile" accept=".xsd" />
+  </div>
+
+  <div class="d-grid mb-3">
+    <button class="btn btn-primary" onclick="handleConversion()"> Convert </button>
+  </div>
+
+  <div class="mt-4">
+    <h5>Output Log</h5>
+    <div class="output-box" id="outputLog"></div>
+    <a id="downloadLink" download class="btn btn-success mt-2 hidden">
+      <i class="bi bi-download me-1"></i>Download Output
+    </a>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
